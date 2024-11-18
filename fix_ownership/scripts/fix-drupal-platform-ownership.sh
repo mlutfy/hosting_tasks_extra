@@ -46,7 +46,7 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-if [ -z "${drupal_root}" ] || [ ! -d "${drupal_root}/sites" ] || [ ! -f "${drupal_root}/core/modules/system/system.module" ] && [ ! -f "${drupal_root}/modules/system/system.module" ]; then
+if [ -z "${drupal_root}" ] || [ ! -f "${drupal_root}/core/modules/system/system.module" ] && [ ! -f "${drupal_root}/modules/system/system.module" ]; then
   printf "Error: Please provide a valid Drupal root directory.\n"
   exit 1
 fi
@@ -57,6 +57,18 @@ if [ -z "${script_user}" ] || [[ $(id -un "${script_user}" 2> /dev/null) != "${s
 fi
 
 cd $drupal_root
+
+if [ ! -d "${drupal_root}/sites" ]; then
+  mkdir "${drupal_root}/sites"
+fi
+if [ ! -d "${drupal_root}/sites/all" ]; then
+  mkdir "${drupal_root}/sites/all"
+fi
+
+# This file is required in Drupal10 for drush multisite support
+if [ ! -f "${drupal_root}/sites/sites.php" ] && [ -f "${drupal_root}/sites/example.sites.php" ]; then
+  cp "${drupal_root}/sites/example.sites.php" "${drupal_root}/sites/sites.php"
+fi
 
 printf "Changing ownership of all contents of "${drupal_root}":\n user => "${script_user}" \t group => "${web_group}"\n"
 find . \( -path "./sites" -prune \) -exec chown ${script_user}:${web_group} '{}' \+
